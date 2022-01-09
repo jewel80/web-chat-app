@@ -6,6 +6,7 @@ import Message from '../../components/message/Message';
 import Topbar from '../../components/topbar/Topbar';
 import { AuthContext } from "../../context/AuthContext";
 import "./messenger.css";
+import { io } from "socket.io-client";
 
 
 export default function Messenger() {
@@ -14,8 +15,38 @@ export default function Messenger() {
   const [currentChat, setCurrentChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [arrivalMessage, setArrivalMessage] = useState(null);
   const { user} = useContext(AuthContext);
+  const socket = useRef();
   const scrollRef = useRef();
+
+
+  useEffect(() => {
+    socket.current = io("ws://localhost:8900");
+    socket.current.on("getMessage", (data) => {
+      setArrivalMessage({
+        sender: data.senderId,
+        text: data.text,
+        createdAt: Date.now(),
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    arrivalMessage &&
+      currentChat?.members.includes(arrivalMessage.sender) &&
+      setMessages((prev) => [...prev, arrivalMessage]);
+  }, [arrivalMessage, currentChat]);
+
+  useEffect(() => {
+    socket.current.emit("addUser", user._id);
+    socket.current.on("getUsers", (users) => {
+      console.log(users)
+      // setOnlineUsers(
+      //   user.followings.filter((f) => users.some((u) => u.userId === f))
+      // );
+    });
+  }, [user]);
 
   useEffect(() => {
     const getMessages = async () => {
@@ -50,15 +81,15 @@ export default function Messenger() {
       conversationId: currentChat._id,
     };
 
-    // const receiverId = currentChat.members.find(
-    //   (member) => member !== user._id
-    // );
+    const receiverId = currentChat.members.find(
+      (member) => member !== user._id
+    );
 
-    // socket.current.emit("sendMessage", {
-    //   senderId: user._id,
-    //   receiverId,
-    //   text: newMessage,
-    // });
+    socket.current.emit("sendMessage", {
+      senderId: user._id,
+      receiverId,
+      text: newMessage,
+    });
 
     try {
       const res = await axios.post("/messages", message);
