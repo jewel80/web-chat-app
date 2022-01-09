@@ -59,11 +59,18 @@ router.get("/", async (req, res) => {
 router.get("/friends/:userId", async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
+    console.log(user)
     const friends = await Promise.all(
+     
       user.followings.map((friendId) => {
+        console.log('============')
+        console.log(friendId)
+        console.log('==========')
         return User.findById(friendId);
       })
     );
+    console.log(friends)
+
     let friendList = [];
     friends.map((friend) => {
       const { _id, username, profilePicture } = friend;
