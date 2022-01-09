@@ -1,6 +1,5 @@
-
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./conversation.css";
 
 export default function Conversation({ conversation, currentUser }) {
@@ -21,7 +20,6 @@ export default function Conversation({ conversation, currentUser }) {
     getUser();
   }, [currentUser, conversation]);
 
-
   return (
     <div className="conversation">
       <img
@@ -35,5 +33,5 @@ export default function Conversation({ conversation, currentUser }) {
       />
       <span className="conversationName">{user?.username}</span>
     </div>
-  )
+  );
 }
